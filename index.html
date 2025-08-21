@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Airbnb-like Chatbot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; background:#0b1020; color:#e8ecf1; }
+    header { padding:16px 20px; background:#0f1530; box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 20px; }
+    .chat { background:#121832; border:1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 16px; height: 65vh; overflow:auto; }
+    .msg { margin: 10px 0; padding: 12px 14px; border-radius: 12px; max-width: 80%; white-space: pre-wrap; line-height:1.4; }
+    .user { background:#2c375f; margin-left:auto; }
+    .bot  { background:#1a2248; border:1px solid rgba(255,255,255,0.06);}
+    .inputBar { display:flex; gap:8px; margin-top:12px; }
+    input, button { padding:12px 14px; border-radius: 12px; border:1px solid rgba(255,255,255,0.15); background:#141a33; color:#e8ecf1; }
+    input { flex:1; }
+    button { cursor: pointer; }
+    .hint { color:#a8b3cf; font-size: 14px; margin-top: 10px;}
+    a { color:#96c8ff; }
+  </style>
+</head>
+<body>
+  <header><div class="wrap"><b>Airbnb-like Chatbot</b></div></header>
+  <div class="wrap">
+    <div id="chat" class="chat"></div>
+    <div class="inputBar">
+      <input id="text" placeholder="Try: Find a place in Mumbai for 3 guests from 2025-09-20 to 2025-09-24 under $80 with wifi" />
+      <button id="send">Send</button>
+    </div>
+    <div class="hint">Tip: After results, say <i>Book id 102 from Oct 6 to Oct 10 for Kaif</i>.</div>
+  </div>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const input = document.getElementById('text');
+    const send = document.getElementById('send');
+    const messages = [{role:'assistant', content:"Hi! I can help you find and book stays. Tell me city, dates, guests, and budget."}];
+
+    function render() {
+      chat.innerHTML = '';
+      messages.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'msg ' + (m.role === 'user' ? 'user' : 'bot');
+        div.textContent = m.content;
+        chat.appendChild(div);
+      });
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function talk() {
+      const text = input.value.trim();
+      if (!text) return;
+      messages.push({role:'user', content:text});
+      render();
+      input.value = '';
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({messages})
+      });
+      const data = await res.json();
+      messages.push({role:'assistant', content:data.reply});
+      render();
+    }
+
+    send.addEventListener('click', talk);
+    input.addEventListener('keydown', (e) => { if(e.key==='Enter') talk(); });
+    render();
+  </script>
+</body>
+</html>

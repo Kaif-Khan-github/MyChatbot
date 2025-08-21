@@ -1,0 +1,18 @@
+### Test home route
+GET https://Chatbot.kaifkhan159159.repl.co/
+
+### Test assistant route
+POST https://Chatbot.kaifkhan159159.repl.co/assistant
+Content-Type: application/json
+
+{
+  "message": "Hello, who are you?"
+}
+
+### Test structured chat
+POST https://Chatbot.kaifkhan159159.repl.co/api/chat
+Content-Type: application/json
+
+{
+  "message": "Show me stays in Mumbai under 60"
+}
