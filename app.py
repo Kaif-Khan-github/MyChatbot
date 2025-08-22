@@ -3,12 +3,15 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import OpenAI
+from httpx import Client as HttpxClient
 
 # --- Init ---
 app = FastAPI()
 
-# Use environment variable instead of api_key= directly
-client = OpenAI()  # Reads OPENAI_API_KEY from environment
+# Force httpx client without proxies (Render fix)
+http_client = HttpxClient(proxies=None)
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), http_client=http_client)
 
 # Enable CORS for frontend
 app.add_middleware(
@@ -95,17 +98,21 @@ async def chat_with_assistant(q: Query):
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[{
-            "role":
-            "system",
-            "content":
-            ("You are a helpful AI assistant for the StayFinder app. "
-             "Help users with bookings, listings, FAQs, travel advice, "
-             "and politely answer unrelated queries.")
-        }, {
-            "role": "user",
-            "content": q.message
-        }])
+        messages=[
+            {
+                "role":
+                "system",
+                "content":
+                ("You are a helpful AI assistant for the StayFinder app. "
+                 "Help users with bookings, listings, FAQs, travel advice, "
+                 "and politely answer unrelated queries."),
+            },
+            {
+                "role": "user",
+                "content": q.message
+            },
+        ],
+    )
 
     return {"reply": response.choices[0].message.content}
 
@@ -118,17 +125,22 @@ async def chat(request: Request):
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[{
-                "role":
-                "system",
-                "content":
-                ("You are a helpful AI assistant. "
-                 "Your main job is to help with the StayFinder app (bookings, listings, FAQs, support). "
-                 "Answer unrelated queries politely as a general assistant.")
-            }, {
-                "role": "user",
-                "content": user_message
-            }])
+            messages=[
+                {
+                    "role":
+                    "system",
+                    "content":
+                    ("You are a helpful AI assistant. "
+                     "Your main job is to help with the StayFinder app (bookings, listings, FAQs, support). "
+                     "Answer unrelated queries politely as a general assistant."
+                     ),
+                },
+                {
+                    "role": "user",
+                    "content": user_message
+                },
+            ],
+        )
         reply = response.choices[0].message.content
         return {"reply": reply}
 
