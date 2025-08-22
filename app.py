@@ -3,15 +3,21 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from openai import OpenAI
-from httpx import Client as HttpxClient
+import httpx
 
 # --- Init ---
 app = FastAPI()
 
-# Force httpx client without proxies (Render fix)
-http_client = HttpxClient(proxies=None)
+# Plain httpx client (Render safe, no proxies arg)
+http_client = httpx.Client()
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), http_client=http_client)
+client = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),
+    http_client=http_client
+)
+
+
+
 
 # Enable CORS for frontend
 app.add_middleware(
